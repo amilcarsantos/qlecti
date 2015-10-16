@@ -25,21 +25,25 @@ Rectangle {
         Button {
             text: "Click me"
             onClicked: {
+                var firstName, lastName;
                 message.text =''
                 Qlecti.on(nameField.text.split(' '))
-                .op().compact()  // remove extra spaces
-                .first(function(k,v){
-                    print('first: ' + v);
-                })
-                .last(function(k,v){
-                    print('last: ' + v);
-                })
-                .one(function(k,v){
-                    message.text = "I need another name"
-                })
-                .empty(function(){
-                    message.text = "It's empty!!"
-                })
+                    .op().compact()  // remove extra spaces
+                    .first(function(k,v){
+                        firstName = v;
+                    })
+                    .last(function(k,v){
+                        lastName = v;
+                    })
+                    .one(function(k,v){
+                        message.text = "I need another name"
+                    })
+                    .empty(function(){
+                        message.text = "It's empty!!"
+                    });
+                if (firstName && lastName) {
+                    print(firstName, lastName);
+                }
             }
         }
     }

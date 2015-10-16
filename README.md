@@ -1,7 +1,11 @@
 # qlecti
 A JavaScript utility library for QML delivering consistency, modularity and functionality.
 
+## - under development -
 
+## Installation
+
+## Example
 ```qml
 import "Qlecti.js" as Qlecti
  ...
@@ -27,4 +31,6 @@ import "Qlecti.js" as Qlecti
   }
 ```
 
+## Features
+ * on(...) supports implicit chaining
 
