@@ -29,13 +29,13 @@ Rectangle {
                 message.text =''
                 Qlecti.on(nameField.text.split(' '))
                     .op().compact()  // remove extra spaces
-                    .first(function(k,v){
+                    .first(function(v){
                         firstName = v;
                     })
-                    .last(function(k,v){
+                    .last(function(v){
                         lastName = v;
                     })
-                    .one(function(k,v){
+                    .one(function(v){
                         message.text = "I need another name"
                     })
                     .empty(function(){

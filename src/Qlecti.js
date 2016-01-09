@@ -6,17 +6,26 @@ var VERSION = '0.0.1';
 //   - first(key, cb) ???
 //   - .reduce() ????
 //   - .expand() ????
+// importar nomes da QList / QVector
+//    - eachBack  -- each backwards / reverse
+//    - mid(N, func()) e mid(N, C, func()) ---
+//    - count(XXX,func()) ou ret().count(XXX) ?? --
+//    - at(i, func1(), v|func2())) -- chama func1() se i valido ou 'v', chama func2() se invalido e 'v'=>func
+//    - op().. append e prepend  -- inserir elementos
+//    - ret().joinStrng(CC)   --- converte valores array para uma string, CC como separador
+
+// TODO Qlecti.ng().range(N,M) ??
 
 var on = function(qlection) {
 
     var _q;
 
-	function _val() {
-		return qlection;
-	}
-	function _next() {
-		return _q;
-	}
+    function _val() {
+        return qlection;
+    }
+    function _next() {
+        return _q;
+    }
 
     function _filterCallback(f) {
         if (f instanceof RegExp) {
@@ -25,7 +34,8 @@ var on = function(qlection) {
             }
         }
         if (f instanceof Function) {
-            return function(v, k, e) {return f(k, v, e)};
+//XXX            return function(v, k, e) {return f(k, v, e)};
+            return f;
         }
         return function(element) {
             return f === element;
@@ -34,18 +44,21 @@ var on = function(qlection) {
     function _compactCallback(word) {
         return [false, null, 0, ""].indexOf(word) < 0;
     }
+    function _is(obj, typ) {
+        return obj.toString().indexOf(typ) >= 0;
+    }
 
-	// process 'undefined'
-	if (!qlection) {
-		_q = {
-			each: _next,
-			empty: function(callback) {
-				callback.call();
-				return _q;
-			},
+    // process 'undefined'
+    if (!qlection) {
+        _q = {
+            each: _next,
+            empty: function(callback) {
+                callback.call();
+                return _q;
+            },
             first: _next,
             last: _next,
-			one: _next,
+            one: _next,
             op: function() {
                 var __q = {
                     each: _next,
@@ -64,14 +77,16 @@ var on = function(qlection) {
                 }
             }
         }
-		return _q;
-	}
+        return _q;
+    }
+
+    // process 'QListModel'
     if (Qt.isQtObject(qlection)) {
-        if (qlection.toString().indexOf("QQmlListModel") >= 0) {
+        if (_is(qlection, "QQmlListModel")) {
             _q = {
                 each: function(callback) {
                     for (var idx = 0, t = qlection.count; idx < t; idx++) {
-                        if (callback.call(_q, idx, qlection.get(idx)) === false) return _q;
+                        if (callback.call(_q, qlection.get(idx), idx) === false) return _q;
                     }
                     return _q;
                 },
@@ -83,32 +98,56 @@ var on = function(qlection) {
                 },
                 first: function(callback) {
                     if (qlection.count > 0) {
-                        callback.call(_q, 0, qlection.get(0));
+                        callback.call(_q, qlection.get(0), 0);
                     }
                     return _q;
                 },
                 last: function(callback) {
                     var li = qlection.count - 1;
                     if (li > 0) {
-                        callback.call(_q, li, qlection.get(li));
+                        callback.call(_q, qlection.get(li), li);
                     }
                     return _q;
                 },
                 one: function(callback) {
                     if (qlection.count === 1) {
-                        callback.call(_q, 0, qlection.get(0));
+                        callback.call(_q, qlection.get(0), 0);
                     }
                     return _q;
                 },
-                op: function() {
+                op: function(stats) {
+                    // operations...
+                    var p_q = _q;
                     var __q = {
-                        each: _next,
-                        empty: _q.empty,
-                        first: _next,
-                        last: _next,
-                        one: _next,
-                        compact: _next,
-                        filter: _next
+                        each: p_q.each,
+                        empty: p_q.empty,
+                        first: p_q.first,
+                        last: p_q.last,
+                        one: p_q.one,
+                        compact: function(key) {
+                            if (!key) {
+                                key = 'name';
+                            }
+                            var word, arr = [];
+                            for (var idx = qlection.count - 1; idx >= 0; --idx) {
+                                word = qlection.get(idx)[key];
+                                if (word !== undefined && _compactCallback(word)) {
+                                    arr.push(qlection.get(idx));
+                                }
+                            }
+                            return on(arr).op();
+                        },
+                        filter: function(callback) {
+                            var obj, arr = [];
+                            for (var idx = qlection.count - 1; idx >= 0; --idx) {
+                                obj = qlection.get(idx);
+                                if (callback(obj, idx, qlection) !== false) {
+                                    arr.push(obj);
+                                }
+                            }
+                            return on(arr).op();
+                        },
+                        ret: p_q.ret
                     };
                     return __q;
                 },
@@ -117,55 +156,67 @@ var on = function(qlection) {
                         val: _val
                     }
                 }
-
             }
             return _q;
         }
         throw "Unsuported object";
     }
 
-	// process 'arrays'
-	if (qlection instanceof Array) {
+    // process 'arrays'
+    if (qlection instanceof Array || (qlection.hasOwnProperty("length") && _is(qlection, "Arguments"))) {
         function _statsArray(currentCol, previousCol) {
             return {
                 count: currentCol.length
             }
         }
 
-		_q = {
-			each: function(callback) {
-				for (var idx = 0, t = qlection.length; idx < t; idx++) {
-					if (callback.call(_q, idx, qlection[idx]) === false) return _q;
-				}
-				return _q;
-			},
-			empty: function(callback) {
+        _q = {
+            at: function(p, callback, defVal) {
+                if (p < qlection.length) {
+                    callback.call(_q, qlection[p]);
+                } else {
+                    if (defVal instanceof Function) {
+                        defVal.call(_q);
+                    } else {
+                        callback.call(_q, defVal);
+                    }
+                }
+                return _q;
+            },
+            each: function(callback) {
+                for (var idx = 0, t = qlection.length; idx < t; idx++) {
+                    if (callback.call(_q, qlection[idx], idx) === false) return _q;
+                }
+                return _q;
+            },
+            empty: function(callback) {
                 if (qlection.length === 0) {
                     callback.call(_q);
                 }
-				return _q;
+                return _q;
             },
             first: function(callback) {
                 if (qlection.length > 0) {
-                    callback.call(_q, 0, qlection[0]);
+                    callback.call(_q, qlection[0], 0);
                 }
                 return _q;
             },
             last: function(callback) {
                 var li = qlection.length - 1;
                 if (li > 0) {
-                    callback.call(_q, li, qlection[li]);
+                    callback.call(_q, qlection[li], li);
                 }
                 return _q;
             },
-			one: function(callback) {
-				if (qlection.length === 1) {
-					callback.call(_q, 0, qlection[0]);
-				}
-				return _q;
+            one: function(callback) {
+                if (qlection.length === 1) {
+                    callback.call(_q, qlection[0], 0);
+                }
+                return _q;
             },
             op: function (stats) {
                 // operations...
+                var _isArr = qlection instanceof Array;
                 var p_q = _q;
                 var __q = {
                     each: p_q.each,
@@ -175,7 +226,20 @@ var on = function(qlection) {
                     one: p_q.one,
                     val: p_q.val,
                     compact: function() {
-                        var _qlection = qlection.filter(_compactCallback);
+                        var _qlection;
+                        if (_isArr) {
+                            _qlection = qlection.filter(_compactCallback);
+                        } else {
+                            var word;
+                            _qlection = []
+                            for (var idx = 0, t = qlection.length; idx < t; idx++) {
+                                word = qlection[idx];
+                                if (word !== undefined && _compactCallback(word)) {
+                                    _qlection.push(word);
+                                }
+                            }
+                            console.log(_qlection)
+                        }
                         return on(_qlection).op(_statsArray(_qlection, qlection));
                     },
                     filter: function(filterCallback) {
@@ -195,34 +259,34 @@ var on = function(qlection) {
                     val: _val
                 }
             }
-		};
-		return _q;
-	}
+        };
+        return _q;
+    }
 
-	// process 'string' or 'dates'
-	if (qlection instanceof String || qlection instanceof Date) {
-		_q = {
-			each: function(callback) {
-				if (qlection.toString() !== "") {
-					callback.call(_q, 0, qlection);
-				}
-				return _q;
-			},
-			empty: function(callback) {
-				if (qlection.toString() === "") {
-					callback.call();
-				}
-				return _q;
-			},
+    // process 'string' or 'dates'
+    if (qlection instanceof String || qlection instanceof Date) {
+        _q = {
+            each: function(callback) {
+                if (qlection.toString() !== "") {
+                    callback.call(_q, 0, qlection);
+                }
+                return _q;
+            },
+            empty: function(callback) {
+                if (qlection.toString() === "") {
+                    callback.call();
+                }
+                return _q;
+            },
             first: function(callback) {
                 callback.call(_q, 0, qlection);
                 return _q;
             },
             last: _next,
-			one: function(callback) {
-				callback.call(_q, undefined, qlection);
-				return _q;
-			},
+            one: function(callback) {
+                callback.call(_q, undefined, qlection);
+                return _q;
+            },
             op: function() {
                 // modifier...
                 throw "UNDER CONSTRUCTION";
@@ -232,37 +296,37 @@ var on = function(qlection) {
                     val: _val
                 }
             }
-		}
-		return _q;
-	}
+        }
+        return _q;
+    }
 
-	// process 'map/object'
-	_q = {
-		each: function(callback) {
-			for (var key in qlection) {
-				if (callback.call(_q, key, qlection[key]) === false) return _q;
-			}
-			return _q;
-		},
-		empty: function(callback) {
-			if (qlection === {}) {
-				callback.call();
-			}
-			return _q;
-		},
+    // process 'map/object'
+    _q = {
+        each: function(callback) {
+            for (var key in qlection) {
+                if (callback.call(_q, key, qlection[key]) === false) return _q;
+            }
+            return _q;
+        },
+        empty: function(callback) {
+            if (qlection === {}) {
+                callback.call();
+            }
+            return _q;
+        },
         first: function() {
             throw "UNDER CONSTRUCTION";
         },
         last: function() {
             throw "UNDER CONSTRUCTION";
         },
-		one: function(callback) {
-			var key = Object.keys(qlection);
-			if (key.length === 1) {
-				callback.call(_q, key, qlection[key]);
-			}
-			return _q;
-		},
+        one: function(callback) {
+            var key = Object.keys(qlection);
+            if (key.length === 1) {
+                callback.call(_q, key, qlection[key]);
+            }
+            return _q;
+        },
         op: {
             filter: function(filterCallback) {
                 // modifier...
@@ -277,6 +341,74 @@ var on = function(qlection) {
                 val: _val
             }
         }
-	};
-	return _q;
+    };
+    return _q;
 }
+
+
+var ng = function() {
+
+    var _g;
+
+    function _initCurve() {
+        var globalProp = "__qlecti_ng_easingObj";
+
+        var easingObj = Qt.applicaton[globalProp];
+        if (!easingObj) {
+            var qml = 'import "easing.js" as Easing;'
+            + ' QtObject {'
+            + ' property var easingDef;'
+            + ' Component.onCompleted: easingDef = Easing.easing} ';
+            easingObj = Qt.createQmlObject(qml, Qt.applicaton, 'qlecti.dynamic');
+            Qt.applicaton[globalProp] = easingObj;
+        }
+    };
+
+    _g = {
+        range: function(m, n, callback) {
+            if (!callback && (n instanceof Function)) {
+                callback = n;
+                n = m;
+                m = 0;
+            }
+            for (var i = m; i < n; i++) {
+                if (callback.call(_g, i) === false) return _g;
+            }
+            return _g;
+        },
+        rangeBack: function(m, n, callback) {
+            // FIXME
+            if (!callback && (n instanceof Function)) {
+                callback = n;
+                n = m;
+                m = 0;
+            }
+            for (var i = m; i > n; i--) {
+                if (callback.call(_g, i) === false) return _g;
+            }
+            return _g;
+        },
+        easing: function(curve) {
+            var _c = _initCurve(curve);
+            return {
+                at: function(p, callback, defVal) {
+                    if (p <= _c.count) {
+                        callback.call(_g, _c.easingFunc((p / _c.count) * _c.last));
+                    } else {
+                        if (defVal instanceof Function) {
+                            defVal.call(_g);
+                        } else {
+                            callback.call(_g, defVal);
+                        }
+                    }
+                },
+                ret: function() {
+                    throw "TODO easing.ret...";
+                }
+            }
+        }
+
+    };
+    return _g;
+}
+

@@ -1,4 +1,3 @@
-
 .pragma library
 .import "vendor/qunit.qt.js" as QUnit
 .import "../src/Qlecti.js" as Ql
@@ -14,11 +13,11 @@ function testArrays() {
   QUnit.module('Arrays');
 
   QUnit.test('first', function(assert) {
-    assert.equal(_promise(Ql.on([1, 2, 3]).first(function(k,v) {
+    assert.equal(_promise(Ql.on([1, 2, 3]).first(function(v,k) {
       promiseValue = v;
     })) , 1, 'can pull out the first element of an array');
     promiseValue = '_is_empty_';
-    assert.equal(_promise(Ql.on([]).first(function(k,v) {
+    assert.equal(_promise(Ql.on([]).first(function(v,k) {
       promiseValue = v;
     })) , '_is_empty_', 'can skip callback of an empty array');
 
@@ -27,8 +26,9 @@ function testArrays() {
     //TODO: assert.deepEqual(_.first([1, 2, 3], 0), [], 'can pass an index to first');
     //TODO: assert.deepEqual(_.first([1, 2, 3], 2), [1, 2], 'can pass an index to first');
     //TODO: assert.deepEqual(_.first([1, 2, 3], 5), [1, 2, 3], 'can pass an index to first');
-    //NEVER var result = (function(){ return _.first(arguments); }(4, 3, 2, 1));
-    //NEVER assert.equal(result, 4, 'works on an arguments object.');
+    assert.equal((function(){ return _promise(Ql.on(arguments).first(function(v,k) {
+      promiseValue = v;
+    })); })(4, 3, 2, 1), 4, 'works on an arguments object.');
     //TODO: result = _.map([[1, 2, 3], [1, 2, 3]], _.first);
     //TODO: assert.deepEqual(result, [1, 1], 'works well with _.map');
     //?? result = (function() { return _.first([1, 2, 3], 2); }());
@@ -38,15 +38,6 @@ function testArrays() {
     //TODO: assert.strictEqual(_.first([1, 2, 3], -1).length, 0);
   });
 
-/*NOT
-  test('head', function(assert) {
-    assert.strictEqual(_.first, _.head, 'alias for first');
-  });
-
-  test('take', function(assert) {
-    assert.strictEqual(_.first, _.take, 'alias for first');
-  });
-*/
 
 /** TODO: .eachLast(count, func()) ?? ...
   test('rest', function(assert) {
@@ -84,31 +75,45 @@ function testArrays() {
     assert.deepEqual(_.flatten(result), [1, 2, 1, 2], 'initial works with _.map');
   });
 */
+  QUnit.test('each', function(assert) {
+    promiseValue = [];
+    assert.deepEqual(_promise(Ql.on([1, 5, 3, 2, 4]).each(function(v,k) {
+      promiseValue.push(v * 10 + k);
+    })), [10, 51, 32, 23, 44], 'can loop each element in array');
+    promiseValue = [];
+    assert.deepEqual(_promise(Ql.on([1, 5, 3, 2, 4]).each(function(v,k) {
+      promiseValue.push(v * 10);
+      if (k>=3) return false;
+    })), [10, 50, 30, 20], 'can break loop in "each"');
+    promiseValue = '_is_empty_';
+    assert.equal(_promise(Ql.on([]).each(function(v,k) {
+      promiseValue = v;
+    })) , '_is_empty_', 'can skip callback of an empty array');
+    promiseValue = [];
+    assert.deepEqual((function(){ return _promise(Ql.on(arguments).each(function(v,k) {
+      promiseValue.push(v * 10 + k);
+    })); })(1, 5, 3, 2, 4), [10, 51, 32, 23, 44], 'can loop each element on arguments object');
+ });
 
 
   QUnit.test('last', function(assert) {
-    assert.equal(_promise(Ql.on([1, 2, 3]).last(function(k,v) {
+    assert.equal(_promise(Ql.on([1, 2, 3]).last(function(v,k) {
         promiseValue = v;
 	})), 3, 'can pull out the last element of an array');
     promiseValue = '_is_empty_';
-    assert.equal(_promise(Ql.on([1]).last(function(k,v) {
+    assert.equal(_promise(Ql.on([1]).last(function(v,k) {
       promiseValue = v;
     })) , '_is_empty_', 'can skip callback of an array with 1 element');
     promiseValue = '_is_empty_';
-    assert.equal(_promise(Ql.on([]).last(function(k,v) {
+    assert.equal(_promise(Ql.on([]).last(function(v,k) {
       promiseValue = v;
     })) , '_is_empty_', 'can skip callback of an empty array');
 
     //assert.deepEqual(_.last([1, 2, 3], 0), [], 'can pass an index to last');
     //TODO: assert.deepEqual(_.last([1, 2, 3], 2), [2, 3], 'can pass an index to last');
-    //NEVER assert.deepEqual(_.last([1, 2, 3], 5), [1, 2, 3], 'can pass an index to last');
-    //NEVER var result = (function(){ return _(arguments).last(); }(1, 2, 3, 4));
-    //NEVER assert.equal(result, 4, 'works on an arguments object');
-    //NEVER result = _.map([[1, 2, 3], [1, 2, 3]], _.last);
-    //NEVER assert.deepEqual(result, [3, 3], 'works well with _.map');
-
-    //NEVER assert.equal(_.last(null), void 0, 'handles nulls');
-    //NEVER assert.strictEqual(_.last([1, 2, 3], -1).length, 0);
+    assert.equal((function(){ return _promise(Ql.on(arguments).last(function(v,k) {
+      promiseValue = v;
+    })); })(4, 3, 2, 1), 1, 'works on an arguments object.');
   });
 
   QUnit.test('empty', function(assert) {
@@ -125,8 +130,8 @@ function testArrays() {
   QUnit.test('compact', function(assert) {
     assert.equal(Ql.on([0, 1, false, 2, false, 3]).op().compact()
         .ret().val().length , 3, 'can trim out all falsy values');
-    //NEVER var result = (function(){ return _.compact(arguments).length; }(0, 1, false, 2, false, 3));
-    //NEVER assert.equal(result, 3, 'works on an arguments object');
+    assert.equal((function(){ return Ql.on(arguments).op().compact()
+        .ret().val().length;})(0, 1, false, 2, false, 3, ''), 3, 'can trim out all falsy argument values.');
   });
 
 /** TODO ??
@@ -157,7 +162,7 @@ function testArrays() {
   });
 */ 
 
-//TODO: op().without(...)
+
   QUnit.test('without', function(assert) {
     var list = [1, 2, 1, 0, 3, 1, 4];
     assert.deepEqual(Ql.on(list).op().without(0, 1)

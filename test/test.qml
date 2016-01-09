@@ -75,6 +75,7 @@ Rectangle {
         anchors.right: parent.right
         anchors.top: header.bottom
         anchors.bottom: footer.top
+        clip: true
 		
 		model: testModel
 		
@@ -138,6 +139,11 @@ Rectangle {
         anchors.bottom: parent.bottom
 
         onClicked: {
+            Qt.quit();
+        }
+    }
+    Keys.onPressed: {
+        if (event.key === Qt.Key_Escape) {
             Qt.quit();
         }
     }
@@ -209,6 +215,7 @@ Rectangle {
                 .arg(details.passed).arg(details.failed).arg(details.total).arg(details.runtime);
 		});
 		
+        // Load tests
         Arrays.testArrays();
         ListModels.testListModels(listModelsParent);
 
