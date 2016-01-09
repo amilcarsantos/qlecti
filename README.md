@@ -33,5 +33,5 @@ import "Qlecti.js" as Qlecti
 ```
 
 ## Features
- * on(...) supports implicit chaining
- * ng().easing(...) easing equations (danro/easing-js) - under development -
+ * `on(...)` supports implicit chaining
+ * `ng().easing(...)` easing equations (danro/easing-js) - under development -
