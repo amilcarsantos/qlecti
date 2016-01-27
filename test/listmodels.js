@@ -56,15 +56,57 @@ function testListModels(parent) {
   QUnit.test('last', function(assert) {
     var listModel = Qt.createQmlObject('import QtQuick 2.0; ListModel {ListElement{data: 1} ListElement{data: 2} ListElement{data: 3}}',
                                    parent, "dynamicListModel" + (modelCount++));
+    var listModel_1 = Qt.createQmlObject('import QtQuick 2.0; ListModel {ListElement{data: 321}}',
+                                   parent, "dynamicListModel" + (modelCount++));
     assert.equal(_promise(Ql.on(listModel).last(function(v,k) {
         promiseValue = v.data;
     })) , 3, 'can pull out the last element of a ListModel');
+    promiseValue = '_is_empty_';
+    assert.equal(_promise(Ql.on(listModel_1).last(function(v,k) { // TODO
+      promiseValue = v;
+    })) , '_is_empty_', 'can skip callback of a ListModel with 1 element');
 	
     promiseValue = '_not_called_';
 	assert.equal(_promise(
       Ql.on(createEmptyListModel()).last(function(v,k) {
         promiseValue = 'WTF';
     })) , '_not_called_', 'can skip callback of a empty ListModel');
+  });
+
+
+  QUnit.test('at', function(assert) {
+    var listModel = Qt.createQmlObject('import QtQuick 2.0; ListModel {ListElement{data: 2} ListElement{data: 3} ListElement{data: 1} ListElement{data: 4}}',
+                                   parent, "dynamicListModel" + (modelCount++));
+    assert.equal(_promise(Ql.on(listModel).at(1, function(v,k) {
+      promiseValue = v.data;
+    })), 3,	'can pull out the N element of a ListModel');
+
+    assert.equal(_promise(Ql.on(listModel).at(99, function(v,k) {
+      promiseValue = v.data;
+    }, {data:88})), 88, 'can pull out the default value when outside of a ListModel');
+	
+    promiseValue = '_not_called_';
+    assert.equal(_promise(Ql.on(listModel).at(99, function(v,k) {
+      promiseValue = v;
+    }, function() {
+      promiseValue = '_called_from_cb2_';
+    })), '_called_from_cb2_', 'can skip normal callback and call alternative callback when outside of a ListModel');
+
+    promiseValue = '_not_called_';
+	assert.equal(_promise(
+      Ql.on(createEmptyListModel()).at(0, function(v,k) {
+        promiseValue = 'WTF';
+    })), '_not_called_', 'can skip callback of a empty ListModel');
+
+	promiseValue = '_not_called_';
+    assert.equal(_promise(Ql.on(listModel).at(-1, function(v,k) {
+      promiseValue = 'WTF';
+    })) , '_not_called_', 'can skip callback of an negative index');
+
+	promiseValue = '_not_called_';
+    assert.equal(_promise(Ql.on(listModel).at('oops', function(v,k) {
+      promiseValue = 'WTF';
+    })) , '_not_called_', 'can skip callback of an invalid index');
   });
 
 

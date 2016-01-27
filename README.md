@@ -1,7 +1,8 @@
-# qlecti
+# Qlecti
 A JavaScript utility library for QML delivering consistency, modularity and functionality.
 
 ## - UNDER DEVELOPMENT -
+Things will change without warning!
 
 ## Installation
 TODO

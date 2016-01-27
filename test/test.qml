@@ -4,6 +4,7 @@ import QtQuick.Controls 1.1
 import "vendor/qunit.qt.js" as QUnit
 import "arrays.js" as Arrays
 import "listmodels.js" as ListModels
+import "ngs.js" as Ngs
 
 
 Rectangle {
@@ -218,6 +219,7 @@ Rectangle {
         // Load tests
         Arrays.testArrays();
         ListModels.testListModels(listModelsParent);
+        Ngs.testNgs()
 
         QUnit.load(_timeout);
 	}

@@ -44,7 +44,6 @@ var VERSION = '0.0.1';
 //    - op().. append e prepend  -- inserir elementos
 //    - ret().joinStrng(CC)   --- converte valores array para uma string, CC como separador
 
-// TODO Qlecti.ng().range(N,M) ??
 
 var on = function(qlection) {
 
@@ -114,6 +113,12 @@ var on = function(qlection) {
     if (Qt.isQtObject(qlection)) {
         if (_is(qlection, "QQmlListModel")) {
             _q = {
+                at: function(i, callback) {
+                    if (i >= 0 && qlection.count > i) {
+                        callback.call(_q, qlection.get(i), i);
+                    }
+                    return _q;
+                },
                 each: function(callback) {
                     for (var idx = 0, t = qlection.count; idx < t; idx++) {
                         if (callback.call(_q, qlection.get(idx), idx) === false) return _q;
@@ -268,7 +273,6 @@ var on = function(qlection) {
                                     _qlection.push(word);
                                 }
                             }
-                            console.log(_qlection)
                         }
                         return on(_qlection).op(_statsArray(_qlection, qlection));
                     },
@@ -395,6 +399,48 @@ var ng = function() {
     };
 
     _g = {
+        easing: function(curve) {
+            var _c = initCurve(curve);
+            return {
+                at: function(p, callback, defVal) {
+                    if (p <= _c.count) {
+                        callback.call(_g, _c.easingFunc((p / _c.count) * _c.last));
+                    } else {
+                        if (defVal instanceof Function) {
+                            defVal.call(_g);
+                        } else {
+                            callback.call(_g, defVal);
+                        }
+                    }
+                },
+                ret: function() {
+                    throw "TODO easing.ret...";
+                }
+            }
+        },
+        loop: function(m, c, callback) {
+            if (!callback && (c instanceof Function)) {
+                callback = c;
+                c = m;
+                m = 0;
+            }
+            for (var i = m, n = m + c, p = 1; i < n; i++, p++) {
+                if (callback.call(_g, i, p) === false) return _g;
+            }
+            return _g;
+        },
+        loopBack: function(m, c, callback) {
+            // FIXME
+            if (!callback && (c instanceof Function)) {
+                callback = n;
+                n = m;
+                m = 0;
+            }
+            for (var i = m, n = m + c; i > n; i--) {
+                if (callback.call(_g, i) === false) return _g;
+            }
+            return _g;
+        },
         range: function(m, n, callback) {
             if (!callback && (n instanceof Function)) {
                 callback = n;
@@ -417,27 +463,7 @@ var ng = function() {
                 if (callback.call(_g, i) === false) return _g;
             }
             return _g;
-        },
-        easing: function(curve) {
-            var _c = _initCurve(curve);
-            return {
-                at: function(p, callback, defVal) {
-                    if (p <= _c.count) {
-                        callback.call(_g, _c.easingFunc((p / _c.count) * _c.last));
-                    } else {
-                        if (defVal instanceof Function) {
-                            defVal.call(_g);
-                        } else {
-                            callback.call(_g, defVal);
-                        }
-                    }
-                },
-                ret: function() {
-                    throw "TODO easing.ret...";
-                }
-            }
         }
-
     };
     return _g;
 }

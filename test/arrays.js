@@ -99,7 +99,7 @@ function testArrays() {
   QUnit.test('last', function(assert) {
     assert.equal(_promise(Ql.on([1, 2, 3]).last(function(v,k) {
         promiseValue = v;
-	})), 3, 'can pull out the last element of an array');
+    })), 3, 'can pull out the last element of an array');
     promiseValue = '_is_empty_';
     assert.equal(_promise(Ql.on([1]).last(function(v,k) {
       promiseValue = v;
@@ -115,6 +115,44 @@ function testArrays() {
       promiseValue = v;
     })); })(4, 3, 2, 1), 1, 'works on an arguments object.');
   });
+
+
+  QUnit.test('at', function(assert) {
+    assert.equal(_promise(Ql.on([1, 2, 3]).at(1, function(v,k) {
+        promiseValue = v;
+    })), 2, 'can pull out the N element of an array');
+
+    promiseValue = '_not_called_';
+    assert.equal(_promise(Ql.on([]).at(0, function(v,k) {
+      promiseValue = v;
+    })) , '_not_called_', 'can skip callback of an empty array');
+
+    promiseValue = '_not_called_';
+    assert.equal(_promise(Ql.on([1, 2, 3]).at(-1, function(v,k) {
+      promiseValue = v;
+    })) , '_not_called_', 'can skip callback of an negative index');
+
+	promiseValue = '_not_called_';
+    assert.equal(_promise(Ql.on([1, 2, 3]).at('opps', function(v,k) {
+      promiseValue = v;
+    })) , '_not_called_', 'can skip callback of an invalid index');
+
+    assert.equal(_promise(Ql.on([1, 2, 3]).at(99, function(v,k) {
+      promiseValue = v;
+    }, -11)), -11, 'can pull out the default value when outside of an array');
+
+    promiseValue = '_not_called_';
+    assert.equal(_promise(Ql.on([1, 2, 3]).at(99, function(v,k) {
+      promiseValue = v;
+    }, function() {
+      promiseValue = '_called_from_cb2_';
+    })) , '_called_from_cb2_', 'can skip normal callback and call alternative callback when outside of an array');
+
+    assert.equal((function(){ return _promise(Ql.on(arguments).at(1, function(v,k) {
+      promiseValue = v;
+    })); })(4, 3, 2, 1), 3, 'works on an arguments object.');
+  });
+
 
   QUnit.test('empty', function(assert) {
     promiseValue = '_xxx_';
