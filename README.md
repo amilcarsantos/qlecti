@@ -7,6 +7,12 @@ Things will change without warning!
 ## Installation
 TODO
 
+## Documentation
+
+You can read the Qlecti documentation at:
+
+[Wiki](https://github.com/amilcarsantos/qlecti/wiki).
+
 ## Example
 ```qml
 import "Qlecti.js" as Qlecti
