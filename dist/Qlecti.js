@@ -32,19 +32,6 @@
 
 var VERSION = '0.0.2';
 
-// TODO:
-//   - first(key, cb) ???
-//   - .reduce() ????
-//   - .expand() ????
-// importar nomes da QList / QVector
-//    - eachBack  -- each backwards / reverse
-//    - mid(N, func()) e mid(N, C, func()) ---
-//    - count(XXX,func()) ou ret().count(XXX) ?? --
-//    - at(i, func1(), v|func2())) -- chama func1() se i valido ou 'v', chama func2() se invalido e 'v'=>func
-//    - op().. append e prepend  -- inserir elementos
-//    - ret().joinStrng(CC)   --- converte valores array para uma string, CC como separador
-
-
 var on = function(qlection) {
 
     var _q;
@@ -79,7 +66,6 @@ var on = function(qlection) {
         return obj.toString().indexOf(typ) >= 0;
     }
 
-    // process 'undefined'
     if (!qlection) {
         _q = {
             each: _next,
@@ -111,7 +97,6 @@ var on = function(qlection) {
         return _q;
     }
 
-    // process 'QListModel'
     if (Qt.isQtObject(qlection)) {
         if (_is(qlection, "QQmlListModel")) {
             _q = {
@@ -153,7 +138,6 @@ var on = function(qlection) {
                     return _q;
                 },
                 op: function(stats) {
-                    // operations...
                     var p_q = _q;
                     var __q = {
                         each: p_q.each,
@@ -216,7 +200,6 @@ var on = function(qlection) {
         throw "Unsuported object";
     }
 
-    // process 'arrays'
     if (qlection instanceof Array || (qlection.hasOwnProperty("length") && _is(qlection, "Arguments"))) {
         function _statsArray(currentCol, previousCol) {
             return {
@@ -269,7 +252,6 @@ var on = function(qlection) {
                 return _q;
             },
             op: function (stats) {
-                // operations...
                 var _isArr = qlection instanceof Array;
                 var p_q = _q;
                 var __q = {
@@ -316,7 +298,6 @@ var on = function(qlection) {
         return _q;
     }
 
-    // process 'string' or 'dates'
     if (qlection instanceof String || qlection instanceof Date) {
         _q = {
             each: function(callback) {
@@ -341,7 +322,6 @@ var on = function(qlection) {
                 return _q;
             },
             op: function() {
-                // modifier...
                 throw "UNDER CONSTRUCTION";
             },
             ret: function() {
@@ -353,7 +333,6 @@ var on = function(qlection) {
         return _q;
     }
 
-    // process 'map/object'
     _q = {
         each: function(callback) {
             for (var key in qlection) {
@@ -383,9 +362,6 @@ var on = function(qlection) {
         op: function (stats) {
             var __q = {
                 filter: function(filterCallback) {
-                // modifier...
-              //  var _qlection = qlection.filter(_filterCallback(filterCallback));
-             //   return on(_qlection);
                 throw "UNDER CONSTRUCTION";
                 },
                 ret: _q.ret
@@ -400,7 +376,6 @@ var on = function(qlection) {
     };
     return _q;
 }
-
 
 var ng = function() {
 
@@ -452,7 +427,6 @@ var ng = function() {
             return _g;
         },
         loopBack: function(m, c, callback) {
-            // FIXME
             if (!callback && (c instanceof Function)) {
                 callback = n;
                 n = m;
@@ -475,7 +449,6 @@ var ng = function() {
             return _g;
         },
         rangeBack: function(m, n, callback) {
-            // FIXME
             if (!callback && (n instanceof Function)) {
                 callback = n;
                 n = m;
