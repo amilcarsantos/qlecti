@@ -1,6 +1,6 @@
 .pragma library
 .import "vendor/qunit.qt.js" as QUnit
-.import "../src/Qlecti.js" as Ql
+.import "../src/Qlecti.dbg.js" as Ql
 
 
 function testArrays() {
