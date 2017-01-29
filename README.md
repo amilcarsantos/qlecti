@@ -9,9 +9,7 @@ TODO
 
 ## Documentation
 
-You can read the Qlecti documentation at:
-
-[Wiki](https://github.com/amilcarsantos/qlecti/wiki).
+You can read the Qlecti documentation at: [Wiki](https://github.com/amilcarsantos/qlecti/wiki).
 
 ## Example
 ```qml
@@ -41,4 +39,6 @@ import "Qlecti.js" as Qlecti
 
 ## Features
  * `on(...)` supports implicit chaining
+ * `on(...).op().filter('....')` filters objects like XPath (goessner.net/articles/JsonPath/) - under development -
  * `ng().easing(...)` easing equations (danro/easing-js) - under development -
+
